@@ -31,6 +31,33 @@ public class EventController {
 		return "Message send to IOT-Hub";
 	}
 	
+	@PostMapping("/error")
+	public String sendError(@RequestBody String jsonString) {
+		try(DeviceClient client = new DeviceClient(connString, protocol)) {
+			client.open();
+		    Message msg = new Message(jsonString.getBytes());
+		    msg.setProperty("type", "error");
+		    client.sendEventAsync(msg, new DeviceStatusCallBack(), null);
+		    Thread.sleep(5000);
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		return "Message send to IOT-Hub";
+	}
+	
+	@PostMapping("/state")
+	public String sendState(@RequestBody String jsonString) {
+		try(DeviceClient client = new DeviceClient(connString, protocol)) {
+			client.open();
+		    Message msg = new Message(jsonString.getBytes());
+		    msg.setProperty("type", "state");
+		    client.sendEventAsync(msg, new DeviceStatusCallBack(), null);
+		    Thread.sleep(5000);
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		return "Message send to IOT-Hub";
+	}
 	protected static class DeviceStatusCallBack implements IotHubEventCallback {
 		public void execute(IotHubStatusCode responseStatus, Object callbackContext) {
 			System.out.println("IoT Hub responded to device message with status " + responseStatus.name());
