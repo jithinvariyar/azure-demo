@@ -11,9 +11,11 @@ import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.ServiceBusQueueTrigger;
 
 public class StateFunction {
-	private static final String url = "jdbc:mysql://coffeecloudserver.mysql.database.azure.com:3306/coffeecloud_db?verifyServerCertificate=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC";
-	private static final String user = "coffeecloud@coffeecloudserver";
-	private static final String password = "Tibca1111";private static final String sql = "INSERT INTO states (m, sn, fw, time) values (?, ?, ?, ?)";
+	private static final String url = System.getenv("DBUrl");
+	private static final String user = System.getenv("DBuser");
+	private static final String password = System.getenv("DBpass");
+	
+	private static final String sql = "INSERT INTO states (m, sn, fw, time) values (?, ?, ?, ?)";
 
 	@FunctionName("StateProcessFunction")
 	public void serviceBusProcess(
