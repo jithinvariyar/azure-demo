@@ -13,11 +13,11 @@ import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.ServiceBusQueueTrigger;
 
 public class OrderFunction {
-	private static final String url = "jdbc:mysql://coffeecloudserver.mysql.database.azure.com:3306/coffeecloud_db?verifyServerCertificate=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC";
-	private static final String user = "coffeecloud@coffeecloudserver";
-	private static final String password = "Tibca1111";
+	private static final String url = "jdbc:mysql://coffeecloud.mysql.database.azure.com:3306/coffeecloud_db?verifyServerCertificate=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC";
+	private static final String user = "coffeecloudwrite@coffeecloud";
+	private static final String password = "$Lambda@1432";
 
-	private static final String sql = "INSERT INTO orders (product, productlowercase, sn, fw, time, gid) values (?, ?, ?, ?, ?, ?)";
+	private static final String sql = "INSERT INTO coffeecloud_db.order (product, productlowercase, sn, fw, time, gid) values (?, ?, ?, ?, ?, ?)";
 
 	@FunctionName("OrderProcessFunction")
 	public void serviceBusProcess(
@@ -34,8 +34,6 @@ public class OrderFunction {
 		String sn = jsonObject.getJSONObject("Origin").getString("SN");
 		int fw = (int) jsonObject.getJSONObject("Origin").getNumber("FW");
 		int gid = (int) jsonObject.getNumber("gid");
-		long milliSeconds = jsonObject.getJSONObject("timestamp").getLong("milliseconds");
-		Timestamp time = new Timestamp(milliSeconds);
 
 		try {
 			Class.forName("com.mysql.cj.jdbc.Driver");
@@ -52,7 +50,7 @@ public class OrderFunction {
 			preparedStatement.setString(2, productLowercase);
 			preparedStatement.setString(3, sn);
 			preparedStatement.setInt(4, fw);
-			preparedStatement.setTimestamp(5, time);
+			preparedStatement.setTimestamp(5, new Timestamp(System.currentTimeMillis()));
 			preparedStatement.setInt(6, gid);
 			// sends the statement to the database server
 			preparedStatement.executeUpdate();

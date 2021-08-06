@@ -14,7 +14,7 @@ import com.microsoft.azure.sdk.iot.device.Message;
 @RestController
 @RequestMapping("/events")
 public class EventController {
-	private static String connString = "HostName=coffeecloud-iot.azure-devices.net;DeviceId=4800286;SharedAccessKey=0d+cK75L9Yaqazd9SVRb8JbvT2TJv/zy75GDDYcnXis=";
+	private static String connString = "HostName=DemoCC.azure-devices.net;DeviceId=4800286;SharedAccessKey=prxIjqjZqHL82640LWbYIBjvZe2qFsvAtbXO4ipZblU=";
 	private static IotHubClientProtocol protocol = IotHubClientProtocol.MQTT;
 	
 	@PostMapping("/order")

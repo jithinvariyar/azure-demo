@@ -16,7 +16,7 @@
 		<java.version>1.8</java.version>
 		<azure.functions.maven.plugin.version>1.12.0</azure.functions.maven.plugin.version>
 		<azure.functions.java.library.version>1.4.2</azure.functions.java.library.version>
-		<functionAppName>coffeecloud-functions</functionAppName>
+		<functionAppName>Coffeecloud</functionAppName>
 	</properties>
 
 	<dependencies>

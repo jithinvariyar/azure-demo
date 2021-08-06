@@ -11,9 +11,11 @@ import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.ServiceBusQueueTrigger;
 
 public class StateFunction {
-	private static final String url = "jdbc:mysql://coffeecloudserver.mysql.database.azure.com:3306/coffeecloud_db?verifyServerCertificate=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC";
-	private static final String user = "coffeecloud@coffeecloudserver";
-	private static final String password = "Tibca1111";private static final String sql = "INSERT INTO states (m, sn, fw, time) values (?, ?, ?, ?)";
+	private static final String url = "jdbc:mysql://coffeecloud.mysql.database.azure.com:3306/coffeecloud_db?verifyServerCertificate=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC";
+	private static final String user = "coffeecloudwrite@coffeecloud";
+	private static final String password = "$Lambda@1432";
+	
+	private static final String sql = "INSERT INTO state (m, sn, fw, time) values (?, ?, ?, ?)";
 
 	@FunctionName("StateProcessFunction")
 	public void serviceBusProcess(
@@ -28,8 +30,6 @@ public class StateFunction {
 		String m = jsonObject.getString("m");
 		String sn = jsonObject.getJSONObject("Origin").getString("SN");
 		int fw = (int) jsonObject.getJSONObject("Origin").getNumber("FW");
-		long milliSeconds = jsonObject.getJSONObject("timestamp").getLong("milliseconds");
-		Timestamp time = new Timestamp(milliSeconds);
 
 		try {
 			Class.forName("com.mysql.cj.jdbc.Driver");
@@ -45,7 +45,7 @@ public class StateFunction {
 			preparedStatement.setString(1, m);
 			preparedStatement.setString(2, sn);
 			preparedStatement.setInt(3, fw);
-			preparedStatement.setTimestamp(4, time);
+			preparedStatement.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
 			// sends the statement to the database server
 			preparedStatement.executeUpdate();
 

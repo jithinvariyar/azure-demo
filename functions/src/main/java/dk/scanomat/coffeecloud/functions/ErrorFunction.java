@@ -11,11 +11,11 @@ import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.ServiceBusQueueTrigger;
 
 public class ErrorFunction {
-	private static final String url = "jdbc:mysql://coffeecloudserver.mysql.database.azure.com:3306/coffeecloud_db?verifyServerCertificate=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC";
-	private static final String user = "coffeecloud@coffeecloudserver";
-	private static final String password = "Tibca1111";
+	private static final String url = "jdbc:mysql://coffeecloud.mysql.database.azure.com:3306/coffeecloud_db?verifyServerCertificate=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC";
+	private static final String user = "coffeecloudwrite@coffeecloud";
+	private static final String password = "$Lambda@1432";
 
-	private static final String sql = "INSERT INTO errors (code, error, errorlowercase, sn, fw, time) values (?, ?, ?, ?, ?, ?)";
+	private static final String sql = "INSERT INTO error (code, error, errorlowercase, sn, fw, time) values (?, ?, ?, ?, ?, ?)";
 
 	@FunctionName("ErrorProcessFunction")
 	public void serviceBusProcess(
@@ -32,8 +32,6 @@ public class ErrorFunction {
 		String errorLowerCase = error.toLowerCase();
 		String sn = jsonObject.getJSONObject("Origin").getString("SN");
 		int fw = (int) jsonObject.getJSONObject("Origin").getNumber("FW");
-		long milliSeconds = jsonObject.getJSONObject("timestamp").getLong("milliseconds");
-		Timestamp time = new Timestamp(milliSeconds);
 
 		try {
 			Class.forName("com.mysql.cj.jdbc.Driver");
@@ -51,7 +49,7 @@ public class ErrorFunction {
 			preparedStatement.setString(3, errorLowerCase);
 			preparedStatement.setString(4, sn);
 			preparedStatement.setInt(5, fw);
-			preparedStatement.setTimestamp(6, time);
+			preparedStatement.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
 			// sends the statement to the database server
 			preparedStatement.executeUpdate();
 
