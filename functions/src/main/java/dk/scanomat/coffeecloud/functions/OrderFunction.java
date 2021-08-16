@@ -17,7 +17,7 @@ public class OrderFunction {
 	private static final String user = System.getenv("DBuser");
 	private static final String password = System.getenv("DBpass");
 
-	private static final String sql = "INSERT INTO orders (product, productlowercase, sn, fw, time, gid) values (?, ?, ?, ?, ?, ?)";
+	private static final String sql = "INSERT INTO order(product, productlowercase, sn, fw, time, gid) values(?, ?, ?, ?, ?, ?)";
 
 	@FunctionName("OrderProcessFunction")
 	public void serviceBusProcess(

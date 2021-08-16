@@ -15,7 +15,7 @@ public class ErrorFunction {
 	private static final String user = System.getenv("DBuser");
 	private static final String password = System.getenv("DBpass");
 
-	private static final String sql = "INSERT INTO errors (code, error, errorlowercase, sn, fw, time) values (?, ?, ?, ?, ?, ?)";
+	private static final String sql = "INSERT INTO error(code, error, errorlowercase, sn, fw, time) values(?, ?, ?, ?, ?, ?)";
 
 	@FunctionName("ErrorProcessFunction")
 	public void serviceBusProcess(

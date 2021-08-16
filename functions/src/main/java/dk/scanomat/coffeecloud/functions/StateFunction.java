@@ -15,7 +15,7 @@ public class StateFunction {
 	private static final String user = System.getenv("DBuser");
 	private static final String password = System.getenv("DBpass");
 	
-	private static final String sql = "INSERT INTO states (m, sn, fw, time) values (?, ?, ?, ?)";
+	private static final String sql = "INSERT INTO state(m, sn, fw, time) values(?, ?, ?, ?)";
 
 	@FunctionName("StateProcessFunction")
 	public void serviceBusProcess(
