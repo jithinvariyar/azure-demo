@@ -1,6 +1,7 @@
 package dk.scanomat.coffeecloud.functions;
 
 import java.util.Collections;
+import java.util.Date;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,7 +17,6 @@ import com.azure.cosmos.models.CosmosContainerProperties;
 import com.azure.cosmos.models.CosmosContainerResponse;
 import com.azure.cosmos.models.CosmosDatabaseResponse;
 import com.azure.cosmos.models.CosmosItemRequestOptions;
-import com.azure.cosmos.models.CosmosItemResponse;
 import com.azure.cosmos.models.PartitionKey;
 import com.azure.cosmos.models.ThroughputProperties;
 import com.microsoft.azure.functions.ExecutionContext;
@@ -117,19 +117,19 @@ public class CosmosDbFunction {
 
 	public static void saveOrder(Order order) throws Exception {
 		CosmosItemRequestOptions cosmosItemRequestOptions = new CosmosItemRequestOptions();
-		CosmosItemResponse<Order> item = orderContainer.createItem(order, new PartitionKey(order.getProduct()),
+		orderContainer.createItem(order, new PartitionKey(order.getProduct()),
 				cosmosItemRequestOptions);
 	}
 
 	public static void saveError(Error error) throws Exception {
 		CosmosItemRequestOptions cosmosItemRequestOptions = new CosmosItemRequestOptions();
-		CosmosItemResponse<Error> item = errorContainer.createItem(error, new PartitionKey(error.getError()),
+		errorContainer.createItem(error, new PartitionKey(error.getError()),
 				cosmosItemRequestOptions);
 	}
 
 	public static void saveState(State state) throws Exception {
 		CosmosItemRequestOptions cosmosItemRequestOptions = new CosmosItemRequestOptions();
-		CosmosItemResponse<State> item = stateContainer.createItem(state, new PartitionKey(state.getM()),
+		stateContainer.createItem(state, new PartitionKey(state.getM()),
 				cosmosItemRequestOptions);
 	}
 
@@ -140,7 +140,9 @@ public class CosmosDbFunction {
 			String product = jsonObject.getString("product");
 			String id = jsonObject.getString("id");
 			int gid = (int) jsonObject.getNumber("gid");
+			long milliseconds = jsonObject.getJSONObject("timestamp").getLong("milliseconds");
 			Origin origin = new Origin();
+			Date date = new Date(milliseconds);
 			origin.setSn(sn);
 			origin.setFw(fw);
 			Order order = new Order();
@@ -148,6 +150,7 @@ public class CosmosDbFunction {
 			order.setGid(gid);
 			order.setProduct(product);
 			order.setId(id);
+			order.setDate(date);
 			return order;
 		}
 		if (eventType == "error") {
@@ -156,7 +159,9 @@ public class CosmosDbFunction {
 			String e = jsonObject.getString("error");
 			int code = (int) jsonObject.getNumber("code");
 			String id = jsonObject.getString("id");
+			long milliseconds = jsonObject.getJSONObject("timestamp").getLong("milliseconds");
 			Origin origin = new Origin();
+			Date date = new Date(milliseconds);
 			origin.setSn(sn);
 			origin.setFw(fw);
 			Error error = new Error();
@@ -164,6 +169,7 @@ public class CosmosDbFunction {
 			error.setError(e);
 			error.setCode(code);
 			error.setId(id);
+			error.setDate(date);
 			return error;
 		}
 		if (eventType == "state") {
@@ -172,12 +178,15 @@ public class CosmosDbFunction {
 			String m = jsonObject.getString("m");
 			Origin origin = new Origin();
 			String id = jsonObject.getString("id");
+			long milliseconds = jsonObject.getJSONObject("timestamp").getLong("milliseconds");
+			Date date = new Date(milliseconds);
 			origin.setSn(sn);
 			origin.setFw(fw);
 			State state = new State();
 			state.setOrigin(origin);
 			state.setId(id);
 			state.setM(m);
+			state.setDate(date);
 			return state;
 		}
 		return null;
@@ -188,6 +197,7 @@ public class CosmosDbFunction {
 		Origin origin;
 		String product;
 		int gid;
+		Date date;
 
 		public String getId() {
 			return id;
@@ -208,6 +218,10 @@ public class CosmosDbFunction {
 		public String getProduct() {
 			return product;
 		}
+		
+		public Date getDate() {
+			return date;
+		}
 
 		public void setProduct(String product) {
 			this.product = product;
@@ -220,6 +234,10 @@ public class CosmosDbFunction {
 		public void setGid(int gid) {
 			this.gid = gid;
 		}
+		
+		public void setDate(Date date) {
+			this.date = date;
+		}
 	}
 
 	static class Error {
@@ -227,6 +245,7 @@ public class CosmosDbFunction {
 		Origin origin;
 		int code;
 		String error;
+		Date date;
 
 		public String getId() {
 			return id;
@@ -238,6 +257,14 @@ public class CosmosDbFunction {
 
 		public Origin getOrigin() {
 			return origin;
+		}
+		
+		public void setDate(Date date) {
+			this.date = date;
+		}
+		
+		public Date getDate() {
+			return date;
 		}
 
 		public void setOrigin(Origin origin) {
@@ -266,7 +293,8 @@ public class CosmosDbFunction {
 		String id;
 		Origin origin;
 		String m;
-
+		Date date;
+		
 		public String getId() {
 			return id;
 		}
@@ -281,6 +309,14 @@ public class CosmosDbFunction {
 
 		public void setOrigin(Origin origin) {
 			this.origin = origin;
+		}
+		
+		public void setDate(Date date) {
+			this.date = date;
+		}
+		
+		public Date getDate() {
+			return date;
 		}
 
 		public String getM() {
