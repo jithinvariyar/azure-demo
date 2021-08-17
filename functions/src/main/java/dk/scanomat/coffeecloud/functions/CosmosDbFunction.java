@@ -45,17 +45,13 @@ public class CosmosDbFunction {
 			final ExecutionContext context) throws Exception {
 		String jsonString = eventHubMessage;
 		JSONObject jsonObject = new JSONObject(jsonString);
-
+		jsonObject.put("id", System.currentTimeMillis() + "");
+		jsonObject.put("id", System.currentTimeMillis() + "");
 		String eventType = null;
-		try {
-			client = new CosmosClientBuilder().endpoint("https://cosmos-coffeecloud.documents.azure.com:443/")
-					.key("fO1B53RO5bpffiabWDMo53nQaQRfm6uf5YhL74T1s9xOxVYfakFyqnuLf6rSolxoiHusljjkIXIADXJmziStyQ==")
-					.preferredRegions(Collections.singletonList("West US")).consistencyLevel(ConsistencyLevel.EVENTUAL)
-					.buildClient();
-		} catch (Exception e) {
-			logger.info("I dont know");
-		}
-
+		client = new CosmosClientBuilder().endpoint("https://cosmos-coffeecloud.documents.azure.com:443/")
+				.key("fO1B53RO5bpffiabWDMo53nQaQRfm6uf5YhL74T1s9xOxVYfakFyqnuLf6rSolxoiHusljjkIXIADXJmziStyQ==")
+				.preferredRegions(Collections.singletonList("West US")).consistencyLevel(ConsistencyLevel.EVENTUAL)
+				.buildClient();
 		CosmosDatabaseResponse cosmosDatabaseResponse = client.createDatabaseIfNotExists(databaseName);
 		database = client.getDatabase(cosmosDatabaseResponse.getProperties().getId());
 
@@ -78,16 +74,19 @@ public class CosmosDbFunction {
 
 		switch (eventType) {
 		case "order":
+			Order order = (Order) getTheEvent(eventType, jsonObject);
 			createContainerIfNotExists(orderContainerName, database);
-			saveOrder(jsonObject);
+			saveOrder(order);
 			break;
 		case "error":
+			Error error = (Error) getTheEvent(eventType, jsonObject);
 			createContainerIfNotExists(errorContainerName, database);
-			saveError(jsonObject);
+			saveError(error);
 			break;
 		case "state":
+			State state = (State) getTheEvent(eventType, jsonObject);
 			createContainerIfNotExists(stateContainerName, database);
-			saveState(jsonObject);
+			saveState(state);
 			break;
 		case "unknown":
 			break;
@@ -116,21 +115,203 @@ public class CosmosDbFunction {
 		}
 	}
 
-	public static void saveOrder(JSONObject jsonObject) throws Exception {
+	public static void saveOrder(Order order) throws Exception {
 		CosmosItemRequestOptions cosmosItemRequestOptions = new CosmosItemRequestOptions();
-		CosmosItemResponse<JSONObject> item = orderContainer.createItem(jsonObject,
-				new PartitionKey(jsonObject.get("product")), cosmosItemRequestOptions);
+		CosmosItemResponse<Order> item = orderContainer.createItem(order, new PartitionKey(order.getProduct()),
+				cosmosItemRequestOptions);
 	}
 
-	public static void saveError(JSONObject jsonObject) throws Exception {
+	public static void saveError(Error error) throws Exception {
 		CosmosItemRequestOptions cosmosItemRequestOptions = new CosmosItemRequestOptions();
-		CosmosItemResponse<JSONObject> item = errorContainer.createItem(jsonObject,
-				new PartitionKey(jsonObject.get("error")), cosmosItemRequestOptions);
+		CosmosItemResponse<Error> item = errorContainer.createItem(error, new PartitionKey(error.getError()),
+				cosmosItemRequestOptions);
 	}
 
-	public static void saveState(JSONObject jsonObject) throws Exception {
+	public static void saveState(State state) throws Exception {
 		CosmosItemRequestOptions cosmosItemRequestOptions = new CosmosItemRequestOptions();
-		CosmosItemResponse<JSONObject> item = stateContainer.createItem(jsonObject,
-				new PartitionKey(jsonObject.get("m")), cosmosItemRequestOptions);
+		CosmosItemResponse<State> item = stateContainer.createItem(state, new PartitionKey(state.getM()),
+				cosmosItemRequestOptions);
 	}
+
+	public static Object getTheEvent(String eventType, JSONObject jsonObject) {
+		if (eventType == "order") {
+			String sn = jsonObject.getJSONObject("Origin").getString("SN");
+			int fw = (int) jsonObject.getJSONObject("Origin").getNumber("FW");
+			String product = jsonObject.getString("product");
+			String id = jsonObject.getString("id");
+			int gid = (int) jsonObject.getNumber("gid");
+			Origin origin = new Origin();
+			origin.setSn(sn);
+			origin.setFw(fw);
+			Order order = new Order();
+			order.setOrigin(origin);
+			order.setGid(gid);
+			order.setProduct(product);
+			order.setId(id);
+			return order;
+		}
+		if (eventType == "error") {
+			String sn = jsonObject.getJSONObject("Origin").getString("SN");
+			int fw = (int) jsonObject.getJSONObject("Origin").getNumber("FW");
+			String e = jsonObject.getString("error");
+			int code = (int) jsonObject.getNumber("code");
+			String id = jsonObject.getString("id");
+			Origin origin = new Origin();
+			origin.setSn(sn);
+			origin.setFw(fw);
+			Error error = new Error();
+			error.setOrigin(origin);
+			error.setError(e);
+			error.setCode(code);
+			error.setId(id);
+			return error;
+		}
+		if (eventType == "state") {
+			String sn = jsonObject.getJSONObject("Origin").getString("SN");
+			int fw = (int) jsonObject.getJSONObject("Origin").getNumber("FW");
+			String m = jsonObject.getString("m");
+			Origin origin = new Origin();
+			String id = jsonObject.getString("id");
+			origin.setSn(sn);
+			origin.setFw(fw);
+			State state = new State();
+			state.setOrigin(origin);
+			state.setId(id);
+			state.setM(m);
+			return state;
+		}
+		return null;
+	}
+
+	static class Order {
+		String id;
+		Origin origin;
+		String product;
+		int gid;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public Origin getOrigin() {
+			return origin;
+		}
+
+		public void setOrigin(Origin origin) {
+			this.origin = origin;
+		}
+
+		public String getProduct() {
+			return product;
+		}
+
+		public void setProduct(String product) {
+			this.product = product;
+		}
+
+		public int getGid() {
+			return gid;
+		}
+
+		public void setGid(int gid) {
+			this.gid = gid;
+		}
+	}
+
+	static class Error {
+		String id;
+		Origin origin;
+		int code;
+		String error;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public Origin getOrigin() {
+			return origin;
+		}
+
+		public void setOrigin(Origin origin) {
+			this.origin = origin;
+		}
+
+		public int getCode() {
+			return code;
+		}
+
+		public void setCode(int code) {
+			this.code = code;
+		}
+
+		public String getError() {
+			return error;
+		}
+
+		public void setError(String error) {
+			this.error = error;
+		}
+
+	}
+
+	static class State {
+		String id;
+		Origin origin;
+		String m;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public Origin getOrigin() {
+			return origin;
+		}
+
+		public void setOrigin(Origin origin) {
+			this.origin = origin;
+		}
+
+		public String getM() {
+			return m;
+		}
+
+		public void setM(String m) {
+			this.m = m;
+		}
+
+	}
+
+	static class Origin {
+		String sn;
+		int fw;
+
+		public String getSn() {
+			return sn;
+		}
+
+		public void setSn(String sn) {
+			this.sn = sn;
+		}
+
+		public int getFw() {
+			return fw;
+		}
+
+		public void setFw(int fw) {
+			this.fw = fw;
+		}
+	}
+
 }
